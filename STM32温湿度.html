@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>STM32 温湿度｜幻屿造梦科技实验室</title>
+
+  <style>
+    :root{
+      --bg1:#0ea5e9; --bg2:#8b5cf6;
+      --card:#ffffff; --text:#0f172a; --muted:#475569; --line:#e2e8f0;
+      --shadow: 0 20px 50px rgba(2, 6, 23, .15);
+      --radius:18px;
+      --ok:#16a34a; --bad:#ef4444;
+    }
+    *{box-sizing:border-box;}
+    body{
+      margin:0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", Arial, sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(1200px 600px at 10% 10%, rgba(255,255,255,.35), transparent 60%),
+        linear-gradient(135deg, var(--bg1), var(--bg2));
+      min-height:100vh;
+    }
+    a{color:inherit; text-decoration:none;}
+    .wrap{max-width: 980px; margin:0 auto; padding:18px 18px 60px;}
+
+    .topbar{
+      position: sticky; top: 12px; z-index: 50;
+      display:flex; justify-content:space-between; align-items:center; gap:12px;
+      padding: 10px 12px; border-radius: 16px;
+      background: rgba(255,255,255,.18);
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,.22);
+      box-shadow: 0 10px 25px rgba(0,0,0,.08);
+      color: rgba(255,255,255,.95);
+      margin-bottom: 14px;
+    }
+    .brand{display:flex; align-items:center; gap:10px; font-weight:700;}
+    .brand-badge{width:34px; height:34px; border-radius:10px; background: rgba(255,255,255,.20); display:grid; place-items:center;}
+    .nav{display:flex; gap:10px; flex-wrap:wrap; font-size:14px;}
+    .nav a{padding:8px 10px; border-radius:999px; background: rgba(255,255,255,.16);}
+    .nav a:hover{background: rgba(255,255,255,.24);}
+
+    .card{background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); overflow:hidden;}
+    .header{
+      padding:22px 22px 16px;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(14,165,233,.10), transparent);
+    }
+    .header h1{margin:0 0 6px; font-size:26px;}
+    .header p{margin:0; color:var(--muted); line-height:1.8;}
+
+    .content{padding:18px;}
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    @media (max-width: 820px){ .grid{grid-template-columns:1fr;} }
+
+    .panel{
+      border:1px solid var(--line);
+      border-radius: 16px;
+      padding: 16px;
+      background:#fff;
+    }
+    .panel h2{margin:0 0 10px; font-size:18px;}
+
+    /* 大数字显示区 */
+    .big{
+      display:flex;
+      align-items:flex-end;
+      gap:10px;
+    }
+    .value{
+      font-size: 52px;
+      font-weight: 800;
+      line-height: 1;
+    }
+    .unit{
+      font-size: 16px;
+      color: var(--muted);
+      padding-bottom: 8px;
+    }
+
+    .row{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    /* 状态灯 */
+    .dot{
+      width:10px; height:10px; border-radius:999px; display:inline-block;
+      background: var(--bad);
+      box-shadow: 0 0 0 4px rgba(239,68,68,.12);
+      margin-right: 8px;
+    }
+    .dot.ok{
+      background: var(--ok);
+      box-shadow: 0 0 0 4px rgba(22,163,74,.12);
+    }
+
+    .btns{display:flex; gap:10px; flex-wrap:wrap; margin-top: 10px;}
+    .btn{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:10px 12px; border-radius:12px;
+      border:1px solid #e2e8f0; background:#fff; font-size:14px;
+      cursor:pointer;
+    }
+    .btn:hover{background:#f8fafc;}
+    .btn.primary{background:#0f172a; color:#fff; border-color:#0f172a;}
+    .btn.primary:hover{background:#111c33;}
+
+    .code{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: 12px;
+      color: #0f172a;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      padding: 10px;
+      border-radius: 12px;
+      overflow:auto;
+    }
+
+    .footer{text-align:center; color: rgba(255,255,255,.88); font-size:13px; margin-top:16px; opacity:.95;}
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand">
+        <div class="brand-badge">🌡️</div>
+        <div>STM32 温湿度</div>
+      </div>
+      <div class="nav">
+        <a href="index.html">返回主页</a>
+        <a href="#data">数据</a>
+        <a href="#api">接口</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="header">
+        <h1>温湿度实时展示（网页端先搭好）</h1>
+        <p>
+          目标：STM32F103C8T6 + DHT11 采集 → ESP8266 发送到接口 → 本页面定时拉取最新数据并显示。
+          目前先用“模拟数据”跑通页面结构，后续再接入真实接口。
+        </p>
+      </div>
+
+      <div class="content">
+        <div class="grid" id="data">
+          <div class="panel">
+            <h2>温度</h2>
+            <div class="big">
+              <div class="value" id="temp">--</div>
+              <div class="unit">°C</div>
+            </div>
+            <div class="row">
+              <div>状态：<span class="dot" id="dot"></span><span id="statusText">离线/暂无数据</span></div>
+              <div>更新时间：<span id="updatedAt">--</span></div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <h2>湿度</h2>
+            <div class="big">
+              <div class="value" id="hum">--</div>
+              <div class="unit">%RH</div>
+            </div>
+
+            <div class="btns">
+              <!-- 现在先用模拟：点击就随机刷新一组数据 -->
+              <button class="btn primary" id="btnMock">模拟刷新数据</button>
+              <!-- 未来接入接口后用：定时/手动刷新 -->
+              <button class="btn" id="btnRefresh">（预留）从接口刷新</button>
+            </div>
+
+            <div class="row">
+              <div>说明：后续接入 API 后，“模拟按钮”可以删掉。</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel" id="api" style="margin-top:12px;">
+          <h2>接口预留（未来接入硬件时要用）</h2>
+          <p style="color:var(--muted); line-height:1.8; margin:0 0 10px;">
+            GitHub Pages 是静态站，不能直接接收 STM32 上传的数据，所以需要一个“中间 API”（比如 Cloudflare Workers）。
+            后续你只要把下面的 API 地址换成真实地址，并实现两个接口即可。
+          </p>
+
+          <div class="code">
+/* 设备上传（STM32/ESP8266 调用）：
+   GET  /api/upload?temp=25&hum=60&key=xxx
+   或  POST /api/upload  { temp:25, hum:60, key:"xxx" }
+
+   网页读取最新数据（本页面调用）：
+   GET /api/latest  ->  { temp: 25, hum: 60, updatedAt: "2025-12-23 16:20:00" }
+*/
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">© <span id="y">2025</span> 幻屿造梦科技实验室 · STM32 工程页</div>
+  </div>
+
+  <script>
+    /* =========================
+       本页 JS 说明
+       - 现在：用“模拟刷新”随机生成温湿度，验证页面显示逻辑
+       - 未来：把 fetchLatest() 接到真实 API（Cloudflare Worker 等）
+       ========================= */
+
+    function pad(n){ return n < 10 ? "0"+n : ""+n; }
+    function fmt(d){
+      return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+    }
+
+    const elTemp = document.getElementById("temp");
+    const elHum = document.getElementById("hum");
+    const elUpdatedAt = document.getElementById("updatedAt");
+    const elDot = document.getElementById("dot");
+    const elStatus = document.getElementById("statusText");
+
+    function setOnline(online){
+      if(online){
+        elDot.classList.add("ok");
+        elStatus.textContent = "在线（模拟）";
+      }else{
+        elDot.classList.remove("ok");
+        elStatus.textContent = "离线/暂无数据";
+      }
+    }
+
+    // 模拟生成数据（先跑通页面）
+    function mockData(){
+      const temp = (20 + Math.random() * 10).toFixed(1); // 20~30℃
+      const hum  = (40 + Math.random() * 30).toFixed(1); // 40~70%
+      elTemp.textContent = temp;
+      elHum.textContent = hum;
+      elUpdatedAt.textContent = fmt(new Date());
+      setOnline(true);
+    }
+
+    // 未来接入真实接口：这里用 fetch 调用 /api/latest
+    async function fetchLatest(){
+      // TODO：未来把 API_URL 换成你的真实接口
+      // const API_URL = "https://xxxxxx.workers.dev/api/latest";
+      // const res = await fetch(API_URL);
+      // const data = await res.json();
+      // elTemp.textContent = data.temp;
+      // elHum.textContent = data.hum;
+      // elUpdatedAt.textContent = data.updatedAt;
+      // setOnline(true);
+
+      alert("接口还没接入：当前只支持“模拟刷新数据”。");
+    }
+
+    document.getElementById("btnMock").addEventListener("click", mockData);
+    document.getElementById("btnRefresh").addEventListener("click", fetchLatest);
+
+    document.getElementById("y").textContent = new Date().getFullYear();
+    setOnline(false); // 初始状态：离线
+  </script>
+</body>
+</html>
