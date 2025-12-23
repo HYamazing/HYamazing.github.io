@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>项目｜幻屿造梦科技实验室</title>
+
+  <style>
+    /* 本页沿用首页的视觉风格（尽量保持一致） */
+    :root{
+      --bg1:#0ea5e9;
+      --bg2:#8b5cf6;
+      --card:#ffffff;
+      --text:#0f172a;
+      --muted:#475569;
+      --line:#e2e8f0;
+      --shadow: 0 20px 50px rgba(2, 6, 23, .15);
+      --radius:18px;
+    }
+    *{box-sizing:border-box;}
+    body{
+      margin:0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", Arial, sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(1200px 600px at 10% 10%, rgba(255,255,255,.35), transparent 60%),
+        linear-gradient(135deg, var(--bg1), var(--bg2));
+      min-height:100vh;
+    }
+    a{ color:inherit; text-decoration:none; }
+
+    .wrap{ max-width: 980px; margin: 0 auto; padding: 18px 18px 60px; }
+
+    /* 顶部导航（本页也做吸顶） */
+    .topbar{
+      position: sticky;
+      top: 12px;
+      z-index: 50;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+
+      padding: 10px 12px;
+      border-radius: 16px;
+
+      background: rgba(255,255,255,.18);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+
+      border: 1px solid rgba(255,255,255,.22);
+      box-shadow: 0 10px 25px rgba(0,0,0,.08);
+
+      color: rgba(255,255,255,.95);
+      margin-bottom: 14px;
+    }
+    .brand{ display:flex; align-items:center; gap:10px; font-weight:700; letter-spacing:.3px; }
+    .brand-badge{
+      width:34px; height:34px; border-radius:10px;
+      background: rgba(255,255,255,.20);
+      display:grid; place-items:center;
+    }
+
+    .nav{ display:flex; gap:10px; flex-wrap:wrap; font-size:14px; }
+    .nav a{
+      padding:8px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.16);
+    }
+    .nav a:hover{ background: rgba(255,255,255,.24); }
+
+    .card{
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+
+    .header{
+      padding: 24px 24px 18px;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(14,165,233,.10), transparent);
+    }
+    .header h1{ margin: 0 0 8px; font-size: 28px; }
+    .header p{ margin: 0; color: var(--muted); line-height: 1.8; }
+
+    .content{ padding: 18px; }
+
+    /* 项目卡片列表 */
+    .cards{
+      display:grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+    @media (max-width: 700px){
+      .cards{ grid-template-columns: 1fr; }
+    }
+
+    .proj{
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 16px;
+      background: #fff;
+    }
+    .proj h2{ margin: 0 0 8px; font-size: 18px; }
+    .proj .meta{ color: var(--muted); font-size: 13px; margin-bottom: 10px; }
+    .proj p{ margin: 0; color: var(--muted); line-height: 1.8; }
+
+    .pill-row{ display:flex; flex-wrap:wrap; gap:8px; margin-top: 12px; }
+    .pill{
+      font-size:12px;
+      color: #0b1220;
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      border-radius:999px;
+      padding: 6px 9px;
+    }
+
+    /* 页内小标题 */
+    .sub{
+      margin: 18px 0 10px;
+      font-weight:700;
+    }
+
+    .footer{
+      text-align:center;
+      color: rgba(255,255,255,.88);
+      font-size: 13px;
+      margin-top: 16px;
+      opacity:.95;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand">
+        <div class="brand-badge">🧪</div>
+        <div>幻屿造梦 · 项目</div>
+      </div>
+      <div class="nav">
+        <!-- 返回首页 -->
+        <a href="index.html">返回首页</a>
+        <a href="#list">项目列表</a>
+        <a href="#plan">下一步</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="header">
+        <h1>项目详情页</h1>
+        <p>
+          这里记录我做过的项目/练习。每完成一个小目标就新增一条，让网站变成我的成长档案。
+        </p>
+      </div>
+
+      <div class="content">
+        <div class="sub" id="list">项目列表</div>
+
+        <div class="cards">
+          <div class="proj">
+            <h2>01｜从本地到上线：我的第一个网页</h2>
+            <div class="meta">时间：2025 · 技术：HTML / GitHub Pages</div>
+            <p>
+              完成了第一个 index.html，并通过 GitHub Pages 发布到公网，获得个人网址。
+              学会了“修改→上传→部署→刷新验证”的完整闭环。
+            </p>
+            <div class="pill-row">
+              <span class="pill">HTML</span>
+              <span class="pill">GitHub Pages</span>
+              <span class="pill">部署</span>
+            </div>
+          </div>
+
+          <div class="proj">
+            <h2>02｜个人主页美化与结构化</h2>
+            <div class="meta">时间：2025 · 技术：CSS / 响应式布局</div>
+            <p>
+              为主页加入卡片、按钮、导航、渐变背景、手机自适应。让页面从“白底黑字”
+              变成“像一个真正的网站”。
+            </p>
+            <div class="pill-row">
+              <span class="pill">CSS</span>
+              <span class="pill">Responsive</span>
+              <span class="pill">UI</span>
+            </div>
+          </div>
+
+          <div class="proj">
+            <h2>03｜顶部状态栏：日期与登录时间</h2>
+            <div class="meta">时间：2025 · 技术：JavaScript / localStorage</div>
+            <p>
+              在顶栏显示当前日期、本次登录时间、首次登录时间（本设备）。
+              学会了用 localStorage 保存简单数据。
+            </p>
+            <div class="pill-row">
+              <span class="pill">JavaScript</span>
+              <span class="pill">localStorage</span>
+              <span class="pill">时间格式化</span>
+            </div>
+          </div>
+
+          <div class="proj">
+            <h2>04｜多页面网站：projects.html</h2>
+            <div class="meta">时间：2025 · 技术：多页面 / 链接跳转</div>
+            <p>
+              新增 projects.html，并从首页项目卡片跳转过来。
+              这是从“单页”走向“网站”的关键一步。
+            </p>
+            <div class="pill-row">
+              <span class="pill">Multi-page</span>
+              <span class="pill">导航</span>
+              <span class="pill">信息架构</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="sub" id="plan">下一步建议</div>
+        <ul style="color: var(--muted); line-height:1.9; margin: 0; padding-left: 18px;">
+          <li>给每个项目加“截图”（上传图片到仓库并在这里展示）</li>
+          <li>做一个“博客/笔记”页面：notes.html</li>
+          <li>把首页“项目展示”改成可点击，跳到本页对应项目</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer">© <span id="y">2025</span> 幻屿造梦科技实验室</div>
+  </div>
+
+  <script>
+    // 页脚年份自动更新
+    document.getElementById("y").textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
