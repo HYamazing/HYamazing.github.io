@@ -1,11 +1,332 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
-    <meta charset="utf-8">
-    <title>我的第一个网页</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HYamazing 的个人主页</title>
+  <style>
+    :root{
+      --bg1:#0ea5e9;
+      --bg2:#8b5cf6;
+      --card:#ffffff;
+      --text:#0f172a;
+      --muted:#475569;
+      --line:#e2e8f0;
+      --shadow: 0 20px 50px rgba(2, 6, 23, .15);
+      --radius:18px;
+    }
+    *{box-sizing:border-box;}
+    body{
+      margin:0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", Arial, sans-serif;
+      color:var(--text);
+      background: radial-gradient(1200px 600px at 10% 10%, rgba(255,255,255,.35), transparent 60%),
+                  linear-gradient(135deg, var(--bg1), var(--bg2));
+      min-height:100vh;
+    }
+    a{color:inherit; text-decoration:none;}
+    .wrap{
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 28px 18px 60px;
+    }
+    .topbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      color:rgba(255,255,255,.92);
+      margin-bottom:18px;
+    }
+    .brand{
+      display:flex; align-items:center; gap:10px;
+      font-weight:700;
+      letter-spacing:.3px;
+    }
+    .brand-badge{
+      width:34px; height:34px; border-radius:10px;
+      background: rgba(255,255,255,.18);
+      display:grid; place-items:center;
+      box-shadow: 0 10px 25px rgba(0,0,0,.08);
+    }
+    .nav{
+      display:flex; gap:14px; flex-wrap:wrap;
+      font-size:14px;
+      opacity:.95;
+    }
+    .nav a{
+      padding:8px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.14);
+    }
+    .nav a:hover{ background: rgba(255,255,255,.22); }
+
+    .card{
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .hero{
+      display:grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap: 18px;
+      padding: 26px;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(14,165,233,.10), transparent);
+    }
+    @media (max-width: 820px){
+      .hero{ grid-template-columns: 1fr; }
+    }
+    .hero-left h1{
+      margin: 0 0 8px;
+      font-size: 34px;
+      line-height: 1.15;
+    }
+    .tagline{
+      margin: 0 0 14px;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.7;
+    }
+    .pill-row{ display:flex; flex-wrap:wrap; gap:10px; margin: 14px 0 0; }
+    .pill{
+      font-size:13px;
+      color: #0b1220;
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      border-radius:999px;
+      padding: 7px 10px;
+    }
+
+    .hero-right{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      align-items:flex-end;
+      justify-content:space-between;
+    }
+    @media (max-width: 820px){
+      .hero-right{ align-items:flex-start; }
+    }
+    .avatar{
+      width: 110px; height: 110px;
+      border-radius: 28px;
+      object-fit: cover;
+      border: 2px solid rgba(15,23,42,.06);
+      box-shadow: 0 16px 30px rgba(2,6,23,.12);
+      background:#fff;
+    }
+    .btns{ display:flex; gap:10px; flex-wrap:wrap; }
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:10px 12px;
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
+      background: #ffffff;
+      color: #0f172a;
+      font-size: 14px;
+    }
+    .btn:hover{ background:#f8fafc; }
+    .btn.primary{
+      background: #0f172a;
+      color: #fff;
+      border-color: #0f172a;
+    }
+    .btn.primary:hover{ background:#111c33; }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      padding: 18px;
+    }
+    @media (max-width: 820px){
+      .grid{ grid-template-columns: 1fr; }
+    }
+    .section{
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 16px;
+      background: #ffffff;
+    }
+    .section h2{
+      margin: 0 0 10px;
+      font-size: 18px;
+    }
+    .section p{ margin: 0; color: var(--muted); line-height:1.8; }
+    .list{
+      margin: 10px 0 0;
+      padding: 0 0 0 18px;
+      color: var(--muted);
+      line-height: 1.9;
+    }
+
+    .projects{
+      padding: 0 18px 18px;
+    }
+    .projects h2{
+      margin: 18px 0 10px;
+      font-size: 18px;
+    }
+    .cards{
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+    @media (max-width: 980px){
+      .cards{ grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 560px){
+      .cards{ grid-template-columns: 1fr; }
+    }
+    .proj{
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 14px;
+      background: #fff;
+      transition: transform .12s ease, box-shadow .12s ease;
+    }
+    .proj:hover{
+      transform: translateY(-2px);
+      box-shadow: 0 14px 35px rgba(2,6,23,.10);
+    }
+    .proj .title{
+      font-weight: 700;
+      margin: 0 0 6px;
+    }
+    .proj .desc{
+      margin: 0 0 10px;
+      color: var(--muted);
+      line-height: 1.7;
+      font-size: 14px;
+    }
+    .proj .meta{
+      display:flex; gap:8px; flex-wrap:wrap;
+    }
+    .footer{
+      text-align:center;
+      color: rgba(255,255,255,.88);
+      font-size: 13px;
+      margin-top: 16px;
+      opacity:.95;
+    }
+    .tiny{
+      font-size:12px;
+      opacity:.9;
+    }
+  </style>
 </head>
+
 <body>
-    <h1>你好，世界！</h1>
-    <p>这是 HYamazing 的第一个网站！</p>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand">
+        <div class="brand-badge">✨</div>
+        <div>HYamazing</div>
+      </div>
+      <div class="nav">
+        <a href="#about">关于</a>
+        <a href="#skills">技能</a>
+        <a href="#projects">项目</a>
+        <a href="#contact">联系</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="hero">
+        <div class="hero-left">
+          <h1>你好，我是 HYamazing 👋</h1>
+          <p class="tagline">
+            这是我的个人主页。我正在从零开始学习网页制作，并把每一次进步都发布到网上。
+          </p>
+
+          <div class="btns">
+            <!-- 把下面的链接改成你的真实信息 -->
+            <a class="btn primary" href="#contact">联系我</a>
+            <a class="btn" href="https://github.com/HYamazing" target="_blank" rel="noopener">GitHub</a>
+          </div>
+
+          <div class="pill-row">
+            <span class="pill">零基础入门</span>
+            <span class="pill">个人网站</span>
+            <span class="pill">持续更新</span>
+          </div>
+        </div>
+
+        <div class="hero-right">
+          <!-- 头像：你可以把 src 换成你自己的图片链接（后面我也能教你把图片上传到仓库） -->
+          <img class="avatar" src="https://via.placeholder.com/220.png?text=HY" alt="头像" />
+          <div class="tiny">网址：hyamazing.github.io</div>
+        </div>
+      </div>
+
+      <div class="grid">
+        <section class="section" id="about">
+          <h2>关于我</h2>
+          <p>
+            我在学习做网站，喜欢把复杂的事情拆成简单步骤。这个网站就是我的练习场：从“你好世界”开始，慢慢升级到更完整的个人主页。
+          </p>
+        </section>
+
+        <section class="section" id="skills">
+          <h2>技能（持续增加）</h2>
+          <ul class="list">
+            <li>HTML：会写页面内容（标题/段落/链接）</li>
+            <li>CSS：会做基础美化（布局/颜色/卡片）</li>
+            <li>GitHub Pages：会把网页免费发布到网上</li>
+          </ul>
+        </section>
+      </div>
+
+      <div class="projects" id="projects">
+        <h2>项目展示</h2>
+        <div class="cards">
+          <div class="proj">
+            <div class="title">我的第一个网页</div>
+            <p class="desc">从本地 index.html 开始，到成功上线 GitHub Pages。</p>
+            <div class="meta">
+              <span class="pill">HTML</span><span class="pill">GitHub Pages</span>
+            </div>
+          </div>
+
+          <div class="proj">
+            <div class="title">个人主页升级</div>
+            <p class="desc">加入布局、卡片、按钮、导航，并适配手机。</p>
+            <div class="meta">
+              <span class="pill">CSS</span><span class="pill">Responsive</span>
+            </div>
+          </div>
+
+          <div class="proj">
+            <div class="title">下一个计划</div>
+            <p class="desc">上传头像、增加更多页面（作品详情/博客）。</p>
+            <div class="meta">
+              <span class="pill">TODO</span><span class="pill">持续更新</span>
+            </div>
+          </div>
+        </div>
+
+        <section class="section" id="contact" style="margin-top:14px;">
+          <h2>联系我</h2>
+          <p>
+            邮箱：<a href="mailto:yourname@example.com">yourname@example.com</a><br/>
+            GitHub：<a href="https://github.com/HYamazing" target="_blank" rel="noopener">github.com/HYamazing</a>
+          </p>
+        </section>
+      </div>
+    </div>
+
+    <div class="footer">
+      © <span id="y">2025</span> HYamazing · 用 GitHub Pages 免费发布
+    </div>
+  </div>
+
+  <script>
+    // 自动更新年份（可留可删）
+    document.getElementById("y").textContent = new Date().getFullYear();
+  </script>
 </body>
 </html>
