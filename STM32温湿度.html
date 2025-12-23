@@ -68,22 +68,9 @@
     }
     .panel h2{margin:0 0 10px; font-size:18px;}
 
-    /* 大数字显示区 */
-    .big{
-      display:flex;
-      align-items:flex-end;
-      gap:10px;
-    }
-    .value{
-      font-size: 52px;
-      font-weight: 800;
-      line-height: 1;
-    }
-    .unit{
-      font-size: 16px;
-      color: var(--muted);
-      padding-bottom: 8px;
-    }
+    .big{display:flex; align-items:flex-end; gap:10px;}
+    .value{font-size: 52px; font-weight: 800; line-height: 1;}
+    .unit{font-size: 16px; color: var(--muted); padding-bottom: 8px;}
 
     .row{
       display:flex;
@@ -93,9 +80,9 @@
       margin-top: 12px;
       color: var(--muted);
       font-size: 14px;
+      flex-wrap: wrap;
     }
 
-    /* 状态灯 */
     .dot{
       width:10px; height:10px; border-radius:999px; display:inline-block;
       background: var(--bad);
@@ -117,6 +104,42 @@
     .btn:hover{background:#f8fafc;}
     .btn.primary{background:#0f172a; color:#fff; border-color:#0f172a;}
     .btn.primary:hover{background:#111c33;}
+
+    /* ===== 折线图容器 ===== */
+    .chart-wrap{
+      margin-top: 12px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+    .legend{
+      display:flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      color: var(--muted);
+      font-size: 13px;
+      align-items:center;
+      justify-content: space-between;
+    }
+    .legend-left{display:flex; gap:12px; flex-wrap:wrap; align-items:center;}
+    .key{
+      display:flex; align-items:center; gap:8px;
+      padding:6px 10px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      background:#fff;
+    }
+    .swatch{
+      width:10px; height:10px; border-radius:999px;
+      background:#0f172a; /* 默认颜色，具体在 JS 里用 canvas 画线，不依赖这个颜色 */
+    }
+    canvas{
+      width: 100%;
+      height: 260px;           /* 视觉高度 */
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fff;
+    }
 
     .code{
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
@@ -143,6 +166,7 @@
       <div class="nav">
         <a href="index.html">返回主页</a>
         <a href="#data">数据</a>
+        <a href="#chart">折线图</a>
         <a href="#api">接口</a>
       </div>
     </div>
@@ -152,7 +176,7 @@
         <h1>温湿度实时展示（网页端先搭好）</h1>
         <p>
           目标：STM32F103C8T6 + DHT11 采集 → ESP8266 发送到接口 → 本页面定时拉取最新数据并显示。
-          目前先用“模拟数据”跑通页面结构，后续再接入真实接口。
+          目前先用“模拟数据 + 折线图”跑通页面结构，后续再接入真实接口。
         </p>
       </div>
 
@@ -165,7 +189,11 @@
               <div class="unit">°C</div>
             </div>
             <div class="row">
-              <div>状态：<span class="dot" id="dot"></span><span id="statusText">离线/暂无数据</span></div>
+              <div>
+                状态：
+                <span class="dot" id="dot"></span>
+                <span id="statusText">离线/暂无数据</span>
+              </div>
               <div>更新时间：<span id="updatedAt">--</span></div>
             </div>
           </div>
@@ -178,14 +206,38 @@
             </div>
 
             <div class="btns">
-              <!-- 现在先用模拟：点击就随机刷新一组数据 -->
-              <button class="btn primary" id="btnMock">模拟刷新数据</button>
-              <!-- 未来接入接口后用：定时/手动刷新 -->
+              <button class="btn primary" id="btnMock">模拟刷新数据（追加到折线图）</button>
               <button class="btn" id="btnRefresh">（预留）从接口刷新</button>
+              <button class="btn" id="btnReset">清空折线图数据</button>
             </div>
 
             <div class="row">
-              <div>说明：后续接入 API 后，“模拟按钮”可以删掉。</div>
+              <div>说明：模拟按钮会把数据写入“最近1小时曲线”。</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 折线图区域：最近 1 小时 -->
+        <div class="panel" id="chart" style="margin-top:12px;">
+          <h2>最近 1 小时曲线（模拟数据）</h2>
+
+          <div class="chart-wrap">
+            <div class="legend">
+              <div class="legend-left">
+                <div class="key"><span class="swatch" id="swTemp"></span>温度</div>
+                <div class="key"><span class="swatch" id="swHum"></span>湿度</div>
+              </div>
+              <div style="color:var(--muted);">
+                数据点：<span id="pointCount">0</span>（自动保留最近 60 分钟）
+              </div>
+            </div>
+
+            <!-- 原生 Canvas 折线图（不依赖第三方库，GitHub Pages 可用） -->
+            <canvas id="chartCanvas" width="1000" height="520"></canvas>
+
+            <div class="row">
+              <div>横轴：时间（最近1小时）</div>
+              <div>纵轴：温度/湿度（分别自适应范围）</div>
             </div>
           </div>
         </div>
@@ -214,22 +266,44 @@
   </div>
 
   <script>
-    /* =========================
-       本页 JS 说明
-       - 现在：用“模拟刷新”随机生成温湿度，验证页面显示逻辑
-       - 未来：把 fetchLatest() 接到真实 API（Cloudflare Worker 等）
-       ========================= */
+    /* =========================================================
+       本页功能说明（零基础版）
+       1) “模拟刷新数据”：随机生成一组温湿度，并显示在大数字上
+       2) 同时把这组数据追加到折线图（带时间戳）
+       3) 折线图自动只保留最近 60 分钟的数据
+       4) Canvas 画图：纯原生，不依赖外部库（GitHub Pages 适配最好）
+       ========================================================= */
 
+    /* ---------- 时间格式工具 ---------- */
     function pad(n){ return n < 10 ? "0"+n : ""+n; }
     function fmt(d){
       return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
     }
+    function fmtHM(d){
+      return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
 
+    /* ---------- 页面元素引用 ---------- */
     const elTemp = document.getElementById("temp");
     const elHum = document.getElementById("hum");
     const elUpdatedAt = document.getElementById("updatedAt");
     const elDot = document.getElementById("dot");
     const elStatus = document.getElementById("statusText");
+    const elPointCount = document.getElementById("pointCount");
+
+    const canvas = document.getElementById("chartCanvas");
+    const ctx = canvas.getContext("2d");
+
+    // 图例色块（仅用于视觉提示；实际画线也用同样颜色）
+    const swTemp = document.getElementById("swTemp");
+    const swHum  = document.getElementById("swHum");
+
+    // 线条颜色（你也可以改）
+    const COLOR_TEMP = "#0f172a";  // 温度线颜色
+    const COLOR_HUM  = "#2563eb";  // 湿度线颜色
+
+    swTemp.style.background = COLOR_TEMP;
+    swHum.style.background  = COLOR_HUM;
 
     function setOnline(online){
       if(online){
@@ -241,35 +315,258 @@
       }
     }
 
-    // 模拟生成数据（先跑通页面）
+    /* =========================================================
+       折线图数据结构：
+       points = [{ t: 时间戳(ms), temp: 数字, hum: 数字 }, ...]
+       ========================================================= */
+    const points = [];
+
+    // 只保留最近 60 分钟（3600000 ms）
+    const WINDOW_MS = 60 * 60 * 1000;
+
+    // 图表内边距（留给坐标、文字）
+    const PADDING = { left: 60, right: 20, top: 20, bottom: 50 };
+
+    /* ---------- 模拟生成并追加数据 ---------- */
     function mockData(){
-      const temp = (20 + Math.random() * 10).toFixed(1); // 20~30℃
-      const hum  = (40 + Math.random() * 30).toFixed(1); // 40~70%
-      elTemp.textContent = temp;
-      elHum.textContent = hum;
-      elUpdatedAt.textContent = fmt(new Date());
+      const now = new Date();
+
+      // 生成合理范围的模拟数据
+      const temp = +(20 + Math.random() * 10).toFixed(1); // 20~30℃
+      const hum  = +(40 + Math.random() * 30).toFixed(1); // 40~70%
+
+      // 1) 更新大数字显示
+      elTemp.textContent = temp.toFixed(1);
+      elHum.textContent = hum.toFixed(1);
+      elUpdatedAt.textContent = fmt(now);
       setOnline(true);
+
+      // 2) 追加到折线图数据
+      points.push({ t: now.getTime(), temp, hum });
+
+      // 3) 清理 60 分钟前的数据
+      trimOldPoints();
+
+      // 4) 更新点数并重画
+      elPointCount.textContent = String(points.length);
+      drawChart();
     }
 
-    // 未来接入真实接口：这里用 fetch 调用 /api/latest
-    async function fetchLatest(){
-      // TODO：未来把 API_URL 换成你的真实接口
-      // const API_URL = "https://xxxxxx.workers.dev/api/latest";
-      // const res = await fetch(API_URL);
-      // const data = await res.json();
-      // elTemp.textContent = data.temp;
-      // elHum.textContent = data.hum;
-      // elUpdatedAt.textContent = data.updatedAt;
-      // setOnline(true);
+    function trimOldPoints(){
+      const cutoff = Date.now() - WINDOW_MS;
+      // 删除过旧数据点（从前往后删）
+      while(points.length > 0 && points[0].t < cutoff){
+        points.shift();
+      }
+    }
 
+    /* =========================================================
+       Canvas 绘制折线图（核心）
+       - X 轴：时间（最近1小时）
+       - Y 轴：温度/湿度分别自适应范围（各自的 min/max）
+       ========================================================= */
+    function drawChart(){
+      // 画布像素尺寸（注意：canvas 的 width/height 是像素，CSS 是显示尺寸）
+      const W = canvas.width;
+      const H = canvas.height;
+
+      // 清空
+      ctx.clearRect(0, 0, W, H);
+
+      // 没数据时提示
+      if(points.length === 0){
+        ctx.fillStyle = "#475569";
+        ctx.font = "16px Microsoft YaHei, Arial";
+        ctx.fillText("暂无数据：点击“模拟刷新数据”开始生成曲线", 80, 80);
+        return;
+      }
+
+      const left = PADDING.left;
+      const right = W - PADDING.right;
+      const top = PADDING.top;
+      const bottom = H - PADDING.bottom;
+
+      // X 轴范围：最近1小时窗口（用“现在”为右端）
+      const xMax = Date.now();
+      const xMin = xMax - WINDOW_MS;
+
+      // Y 轴范围：分别计算温度/湿度的 min/max（加一点边界更好看）
+      const temps = points.map(p => p.temp);
+      const hums  = points.map(p => p.hum);
+
+      const tMin = Math.min(...temps);
+      const tMax = Math.max(...temps);
+      const hMin = Math.min(...hums);
+      const hMax = Math.max(...hums);
+
+      const tPad = Math.max(0.5, (tMax - tMin) * 0.2);
+      const hPad = Math.max(1.0, (hMax - hMin) * 0.2);
+
+      const yTempMin = tMin - tPad;
+      const yTempMax = tMax + tPad;
+      const yHumMin  = hMin - hPad;
+      const yHumMax  = hMax + hPad;
+
+      // 把“时间→x坐标”
+      const tx = (ms) => {
+        const ratio = (ms - xMin) / (xMax - xMin);
+        return left + ratio * (right - left);
+      };
+
+      // 把“温度→y坐标”
+      const tyTemp = (v) => {
+        const ratio = (v - yTempMin) / (yTempMax - yTempMin);
+        return bottom - ratio * (bottom - top);
+      };
+
+      // 把“湿度→y坐标”
+      const tyHum = (v) => {
+        const ratio = (v - yHumMin) / (yHumMax - yHumMin);
+        return bottom - ratio * (bottom - top);
+      };
+
+      /* ---------- 1) 画网格与坐标轴 ---------- */
+      ctx.strokeStyle = "#e2e8f0";
+      ctx.lineWidth = 1;
+
+      // 横向网格（5条）
+      for(let i=0; i<=5; i++){
+        const y = top + (i/5) * (bottom - top);
+        ctx.beginPath();
+        ctx.moveTo(left, y);
+        ctx.lineTo(right, y);
+        ctx.stroke();
+      }
+
+      // 纵向网格（6条）
+      for(let i=0; i<=6; i++){
+        const x = left + (i/6) * (right - left);
+        ctx.beginPath();
+        ctx.moveTo(x, top);
+        ctx.lineTo(x, bottom);
+        ctx.stroke();
+      }
+
+      // 坐标轴边框
+      ctx.strokeStyle = "#cbd5e1";
+      ctx.strokeRect(left, top, right-left, bottom-top);
+
+      /* ---------- 2) 画 X 轴刻度（时间） ---------- */
+      ctx.fillStyle = "#475569";
+      ctx.font = "12px Microsoft YaHei, Arial";
+
+      for(let i=0; i<=6; i++){
+        const ms = xMin + (i/6) * (xMax - xMin);
+        const x = tx(ms);
+        const d = new Date(ms);
+        const label = fmtHM(d);
+
+        ctx.fillText(label, x - 16, bottom + 22);
+      }
+
+      /* ---------- 3) 画左侧温度刻度（温度） ---------- */
+      for(let i=0; i<=5; i++){
+        const v = yTempMax - (i/5) * (yTempMax - yTempMin);
+        const y = tyTemp(v);
+        ctx.fillText(v.toFixed(1), 8, y + 4);  // 左边靠外
+      }
+
+      /* ---------- 4) 画右侧湿度刻度（湿度） ---------- */
+      // 右侧刻度文字对齐右边
+      ctx.textAlign = "right";
+      for(let i=0; i<=5; i++){
+        const v = yHumMax - (i/5) * (yHumMax - yHumMin);
+        const y = tyHum(v);
+        ctx.fillText(v.toFixed(1), W - 8, y + 4);
+      }
+      ctx.textAlign = "left";
+
+      // 标注单位（可读性）
+      ctx.fillStyle = "#0f172a";
+      ctx.fillText("温度(°C)", left, top - 6);
+      ctx.textAlign = "right";
+      ctx.fillText("湿度(%RH)", right, top - 6);
+      ctx.textAlign = "left";
+
+      /* ---------- 5) 画折线：温度 ---------- */
+      drawLine(points, (p)=>tx(p.t), (p)=>tyTemp(p.temp), COLOR_TEMP);
+
+      /* ---------- 6) 画折线：湿度 ---------- */
+      drawLine(points, (p)=>tx(p.t), (p)=>tyHum(p.hum), COLOR_HUM);
+
+      /* ---------- 7) 画最新点的小圆点 ---------- */
+      const last = points[points.length - 1];
+      drawDot(tx(last.t), tyTemp(last.temp), COLOR_TEMP);
+      drawDot(tx(last.t), tyHum(last.hum), COLOR_HUM);
+    }
+
+    // 画一条折线（通用函数）
+    function drawLine(arr, getX, getY, color){
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+
+      for(let i=0; i<arr.length; i++){
+        const x = getX(arr[i]);
+        const y = getY(arr[i]);
+        if(i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+    }
+
+    // 画一个小圆点
+    function drawDot(x, y, color){
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(x, y, 4.5, 0, Math.PI*2);
+      ctx.fill();
+    }
+
+    /* ---------- 清空数据 ---------- */
+    function resetChart(){
+      points.length = 0;
+      elPointCount.textContent = "0";
+      setOnline(false);
+      elTemp.textContent = "--";
+      elHum.textContent = "--";
+      elUpdatedAt.textContent = "--";
+      drawChart();
+    }
+
+    /* ---------- 预留：未来接真实接口 ---------- */
+    async function fetchLatest(){
       alert("接口还没接入：当前只支持“模拟刷新数据”。");
     }
 
+    /* ---------- 绑定按钮 ---------- */
     document.getElementById("btnMock").addEventListener("click", mockData);
     document.getElementById("btnRefresh").addEventListener("click", fetchLatest);
+    document.getElementById("btnReset").addEventListener("click", resetChart);
 
+    /* ---------- 页面初始化 ---------- */
     document.getElementById("y").textContent = new Date().getFullYear();
-    setOnline(false); // 初始状态：离线
+    setOnline(false);
+    drawChart();
+
+    /* =========================================================
+       可选：给你一个“自动生成 1 小时历史数据”的开关（默认关闭）
+       你想一打开页面就有曲线，可以把下面的函数调用取消注释。
+       ========================================================= */
+    function seed1HourData(){
+      const now = Date.now();
+      // 每 1 分钟一个点，总共 60 个点
+      for(let i=60; i>=1; i--){
+        const t = now - i * 60 * 1000;
+        const temp = +(24 + Math.sin(i/8) * 2 + Math.random()).toFixed(1);
+        const hum  = +(55 + Math.cos(i/10) * 6 + Math.random()*2).toFixed(1);
+        points.push({ t, temp, hum });
+      }
+      trimOldPoints();
+      elPointCount.textContent = String(points.length);
+      drawChart();
+    }
+    // seed1HourData(); // ← 想要默认有曲线就把这行前面的 // 去掉
   </script>
 </body>
 </html>
