@@ -253,6 +253,13 @@
       .cards{ grid-template-columns: 1fr; }
     }
 
+    /* 让项目卡整块可点击：把 <a class="proj-link"> 当成卡片容器 */
+    .proj-link{
+    display:block;
+    color:inherit;
+    }
+    .proj-link:focus{ outline: 2px solid rgba(14,165,233,.35); outline-offset: 2px; }
+
     .proj{
       border: 1px solid var(--line);
       border-radius: 16px;
@@ -367,31 +374,16 @@
       <div class="projects" id="projects">
         <h2>项目展示</h2>
 
-        <div class="cards">
-          <div class="proj">
-            <div class="title">我的第一个网页</div>
-            <p class="desc">从本地 index.html 开始，到成功上线 GitHub Pages。</p>
-            <div class="meta">
-              <span class="pill">HTML</span><span class="pill">GitHub Pages</span>
-            </div>
-          </div>
-
-          <div class="proj">
-            <div class="title">个人主页升级</div>
-            <p class="desc">加入布局、卡片、按钮、导航，并适配手机。</p>
-            <div class="meta">
-              <span class="pill">CSS</span><span class="pill">Responsive</span>
-            </div>
-          </div>
-
-          <div class="proj">
-            <div class="title">下一个计划</div>
-            <p class="desc">增加更多页面（作品详情/博客），并做一些交互实验。</p>
-            <div class="meta">
-              <span class="pill">TODO</span><span class="pill">持续更新</span>
-            </div>
-          </div>
-        </div>
+        <a class="proj-link" href="projects.html#list">
+     <div class="proj">
+     <!-- 原来的内容一字不动放这里 -->
+     <div class="title">我的第一个网页</div>
+     <p class="desc">从本地 index.html 开始，到成功上线 GitHub Pages。</p>
+     <div class="meta">
+      <span class="pill">HTML</span><span class="pill">GitHub Pages</span>
+    </div>
+  </div>
+</a>
 
         <section class="section" id="contact" style="margin-top:14px;">
           <h2>联系我</h2>
